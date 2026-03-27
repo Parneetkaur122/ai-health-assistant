@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Health Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 40px auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #111827;
+            font-size: 40px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 25px;
+            font-size: 17px;
+        }
+
+        .input-section {
+            margin-bottom: 25px;
+        }
+
+        input[type="text"] {
+            width: 72%;
+            padding: 15px;
+            font-size: 17px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            outline: none;
+        }
+
+        button {
+            padding: 15px 22px;
+            font-size: 17px;
+            border: none;
+            background: #2563eb;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .download-btn {
+            background: #059669;
+            margin-top: 18px;
+            margin-left: 0;
+        }
+
+        .download-btn:hover {
+            background: #047857;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 14px;
+            color: #2563eb;
+            font-weight: bold;
+        }
+
+        .result-box {
+            margin-top: 30px;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 22px;
+            background: #f9fbff;
+        }
+
+        .user-text {
+            color: #1d4ed8;
+            font-size: 18px;
+            margin-bottom: 18px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: #111827;
+            font-size: 18px;
+        }
+
+        .card p {
+            margin-bottom: 0;
+            color: #374151;
+            line-height: 1.5;
+        }
+
+        .severity {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-weight: bold;
+            color: white;
+            margin-top: 8px;
+        }
+
+        .low {
+            background: #16a34a;
+        }
+
+        .medium {
+            background: #f59e0b;
+        }
+
+        .high {
+            background: #dc2626;
+        }
+
+        .warning {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .history-box {
+            margin-top: 30px;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 22px;
+            background: #ffffff;
+        }
+
+        .history-title {
+            margin-top: 0;
+            color: #111827;
+        }
+
+        .history-item {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 12px 0;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-item p {
+            margin: 4px 0;
+            color: #374151;
+        }
+
+        .footer-note {
+            margin-top: 28px;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            input[type="text"] {
+                width: 100%;
+                margin-bottom: 12px;
+            }
+
+            button {
+                width: 100%;
+                margin-left: 0;
+                margin-top: 10px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Health Assistant</h1>
+        <p class="subtitle">Enter your symptoms to get AI-based early guidance and health safety suggestions.</p>
+
+        <form action="/predict" method="post" onsubmit="showLoading()">
+            <div class="input-section">
+                <input
+                    type="text"
+                    name="symptoms"
+                    id="symptoms"
+                    placeholder="Example: fever, cough, headache"
+                    required
+                >
+                <button type="submit">Analyze Symptoms</button>
+            </div>
+            <div class="loading" id="loadingText">Analyzing symptoms, please wait...</div>
+        </form>
+
+        {% if result %}
+            <div class="result-box">
+                {% if emergency %}
+                    <div class="warning">
+                        Emergency warning: Your symptoms may need urgent medical attention. Please contact a doctor or emergency service immediately.
+                    </div>
+                {% endif %}
+
+                <div class="user-text"><strong>You entered:</strong> {{ user_input }}</div>
+
+                <div class="grid">
+                    <div class="card">
+                        <h3>Possible Condition</h3>
+                        <p>{{ result.possible_condition }}</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>Why This May Match</h3>
+                        <p>{{ result.reason }}</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>Severity Level</h3>
+                        <span class="severity {{ result.severity|lower }}">{{ result.severity }}</span>
+                    </div>
+
+                    <div class="card">
+                        <h3>Basic Care</h3>
+                        <p>{{ result.basic_care }}</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>When to See a Doctor</h3>
+                        <p>{{ result.see_doctor_when }}</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>Medical Disclaimer</h3>
+                        <p>{{ result.disclaimer }}</p>
+                    </div>
+                </div>
+
+                <form action="/download-report" method="post">
+                    <input type="hidden" name="symptoms" value="{{ user_input }}">
+                    <input type="hidden" name="possible_condition" value="{{ result.possible_condition }}">
+                    <input type="hidden" name="reason" value="{{ result.reason }}">
+                    <input type="hidden" name="severity" value="{{ result.severity }}">
+                    <input type="hidden" name="basic_care" value="{{ result.basic_care }}">
+                    <input type="hidden" name="see_doctor_when" value="{{ result.see_doctor_when }}">
+                    <input type="hidden" name="disclaimer" value="{{ result.disclaimer }}">
+                    <button type="submit" class="download-btn">Download Report</button>
+                </form>
+            </div>
+        {% endif %}
+
+        {% if history %}
+            <div class="history-box">
+                <h2 class="history-title">Recent Symptom History</h2>
+                {% for item in history %}
+                    <div class="history-item">
+                        <p><strong>Symptoms:</strong> {{ item.symptoms }}</p>
+                        <p><strong>Possible Condition:</strong> {{ item.condition }}</p>
+                        <p><strong>Severity:</strong> {{ item.severity }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <p class="footer-note">
+            This tool is for educational purposes only. It does not provide a confirmed diagnosis and should not replace a qualified medical professional.
+        </p>
+    </div>
+
+    <script>
+        function showLoading() {
+            document.getElementById("loadingText").style.display = "block";
+        }
+    </script>
+</body>
+</html>
